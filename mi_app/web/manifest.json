@@ -1,6 +1,6 @@
 {
-    "name": "mi_app",
-    "short_name": "mi_app",
+    "name": "login_pro",
+    "short_name": "login_pro",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

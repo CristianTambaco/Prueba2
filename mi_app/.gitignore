@@ -1,9 +1,17 @@
 # Miscellaneous
+.claude/
 *.class
 *.log
 *.pyc
 *.swp
 .DS_Store
+*.md
+
+# Office temporary files
+~$*
+*.tmp
+*.docx
+*.doc
 .atom/
 .build/
 .buildlog/
@@ -11,6 +19,11 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
 
 # IntelliJ related
 *.iml
