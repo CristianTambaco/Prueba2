@@ -62,7 +62,7 @@ class _ShelterPetsPageState extends State<ShelterPetsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Mascota eliminada')),
         );
-        _loadPets(); // 👈 Refresca la lista
+        _loadPets(); //  Refresca la lista
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${result.fold((l) => l.message, (_) => '')}')),
@@ -91,7 +91,7 @@ class _ShelterPetsPageState extends State<ShelterPetsPage> {
                 MaterialPageRoute(
                   builder: (_) => AddEditPetPage(shelterId: user.id),
                 ),
-              ).then((_) => _loadPets()); // 👈 Recarga después de agregar/editar
+              ).then((_) => _loadPets()); //  Recarga después de agregar/editar
             },
           ),
         ],
@@ -138,7 +138,7 @@ class _ShelterPetsPageState extends State<ShelterPetsPage> {
                                       pet: pet,
                                     ),
                                   ),
-                                ).then((_) => _loadPets()); // 👈 Recarga después de editar
+                                ).then((_) => _loadPets()); //  Recarga después de editar
                               },
                             ),
                             IconButton(
