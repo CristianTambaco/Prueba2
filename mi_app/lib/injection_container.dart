@@ -11,6 +11,11 @@ import 'features/pet/data/repositories/pet_repository_impl.dart';
 import 'features/adoption_request/domain/repositories/adoption_request_repository.dart'; // ✅
 import 'features/adoption_request/data/repositories/adoption_request_repository_impl.dart'; // ✅
 
+
+import 'features/gemini_chat/services/gemini_service.dart';
+import 'features/gemini_chat/services/tts_service.dart';
+
+
 final getIt = GetIt.instance;
 
 @InjectableInit()
@@ -32,6 +37,11 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<AdoptionRequestRepository>(
     () => AdoptionRequestRepositoryImpl(getIt<SupabaseClient>()),
   );
+
+
+  getIt.registerLazySingleton<GeminiService>(() => GeminiService());
+  getIt.registerLazySingleton<TtsService>(() => TtsService());
+
 
   // Initialize injectable
   getIt.init();

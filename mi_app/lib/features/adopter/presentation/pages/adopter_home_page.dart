@@ -12,6 +12,11 @@ import '../../../pet/domain/repositories/pet_repository.dart';
 
 import '../../../adoption_request/domain/repositories/adoption_request_repository.dart';
 
+import '../../../gemini_chat/presentation/screens/chat_screen.dart';
+
+
+import '../../../gemini_chat/cubits/chat_cubit.dart';
+import '../../../gemini_chat/services/gemini_service.dart';
 
 
 class AdopterHomePage extends StatelessWidget {
@@ -145,6 +150,20 @@ class AdopterHomePage extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Solicitudes'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
         ],
+        onTap: (index) {
+          if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BlocProvider(
+                  create: (context) => ChatCubit(getIt<GeminiService>()),
+                  child: const ChatScreen(),
+                ),
+              ),
+            );
+          }
+        },
+        
       ),
     );
   }
