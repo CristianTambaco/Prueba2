@@ -8,6 +8,9 @@ import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/welcome_page.dart';
 import 'injection_container.dart';
+import 'features/auth/domain/entities/user_entity.dart'; 
+import 'features/adopter/presentation/pages/adopter_home_page.dart'; // ✅
+import 'features/shelter/presentation/pages/shelter_home_page.dart'; // ✅
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,13 +36,13 @@ class MyApp extends StatelessWidget {
         home: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             if (state is AuthLoading || state is AuthInitial) {
-              return const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
             } else if (state is AuthAuthenticated) {
-              return WelcomePage(user: state.user);
+              if (state.user.userType == UserType.refugio) {
+                return const ShelterHomePage();
+              } else {
+                return const AdopterHomePage();
+              }
             } else {
               return const LoginPage();
             }

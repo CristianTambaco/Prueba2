@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:login_pro/features/auth/presentation/pages/account_type_page.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -178,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                               onPressed: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (_) => const RegisterPage(),
+                                    builder: (_) => const AccountTypePage(),
                                   ),
                                 );
                               },

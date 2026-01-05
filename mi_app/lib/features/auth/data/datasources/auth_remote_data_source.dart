@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
+import '../../domain/entities/user_entity.dart';
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> signInWithEmailAndPassword({
@@ -12,6 +13,7 @@ abstract class AuthRemoteDataSource {
     required String email,
     required String password,
     String? displayName,
+    required UserType userType, 
   });
 
   Future<void> sendPasswordResetEmail({
@@ -59,12 +61,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
     required String password,
     String? displayName,
+    required UserType userType, // ✅ Añade este parámetro aquí
   }) async {
     try {
       final response = await supabaseClient.auth.signUp(
         email: email,
         password: password,
-        data: displayName != null ? {'display_name': displayName} : null,
+        data: {
+          'display_name': displayName,
+          'user_type': userType.name, // ✅ Guarda el tipo en los metadatos
+        },
       );
 
       if (response.user == null) {

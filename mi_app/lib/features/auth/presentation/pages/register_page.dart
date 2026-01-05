@@ -7,9 +7,16 @@ import '../widgets/custom_text_field.dart';
 import '../widgets/loading_overlay.dart';
 import 'email_verification_sent_page.dart';
 import 'welcome_page.dart';
+import '../../domain/entities/user_entity.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+  // ✅ Define el parámetro en el widget
+  final UserType userType;
+
+  const RegisterPage({
+    super.key,
+    required this.userType, // ✅ Requerido
+  });
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -21,6 +28,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
+  // ✅ Usa widget.userType (no declares una nueva propiedad final aquí)
+  // No necesitas: final UserType userType;
 
   @override
   void dispose() {
@@ -34,12 +44,13 @@ class _RegisterPageState extends State<RegisterPage> {
   void _handleSignUp() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
-            SignUpRequested(
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-              displayName: _nameController.text.trim(),
-            ),
-          );
+        SignUpRequested(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          displayName: _nameController.text.trim(),
+          userType: widget.userType, // ✅ Accede al userType desde el widget
+        ),
+      );
     }
   }
 
@@ -56,7 +67,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             );
           } else if (state is EmailVerificationRequired) {
-            // Mostrar pantalla de verificación de email
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (_) => EmailVerificationSentPage(email: state.email),
@@ -85,7 +95,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Back button
                         Align(
                           alignment: Alignment.centerLeft,
                           child: IconButton(
@@ -94,16 +103,12 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-
-                        // Logo o icono
                         Icon(
                           Icons.person_add_rounded,
                           size: 80,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(height: 24),
-
-                        // Título
                         Text(
                           'Crear cuenta',
                           style: Theme.of(context).textTheme.displayMedium,
@@ -116,8 +121,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 48),
-
-                        // Name field
                         CustomTextField(
                           controller: _nameController,
                           label: 'Nombre completo',
@@ -131,8 +134,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         const SizedBox(height: 16),
-
-                        // Email field
                         CustomTextField(
                           controller: _emailController,
                           label: 'Correo electrónico',
@@ -150,8 +151,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         const SizedBox(height: 16),
-
-                        // Password field
                         CustomTextField(
                           controller: _passwordController,
                           label: 'Contraseña',
@@ -169,8 +168,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         const SizedBox(height: 16),
-
-                        // Confirm password field
                         CustomTextField(
                           controller: _confirmPasswordController,
                           label: 'Confirmar contraseña',
@@ -188,8 +185,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         const SizedBox(height: 32),
-
-                        // Register button
                         SizedBox(
                           height: 56,
                           child: ElevatedButton(
@@ -198,8 +193,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-
-                        // Info text
                         Text(
                           'Recibirás un correo de verificación para activar tu cuenta',
                           style: Theme.of(context).textTheme.bodyMedium,

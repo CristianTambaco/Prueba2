@@ -8,7 +8,6 @@ import '../repositories/auth_repository.dart';
 @injectable
 class SignUp implements UseCase<UserEntity, SignUpParams> {
   final AuthRepository repository;
-
   SignUp(this.repository);
 
   @override
@@ -17,6 +16,7 @@ class SignUp implements UseCase<UserEntity, SignUpParams> {
       email: params.email,
       password: params.password,
       displayName: params.displayName,
+      userType: params.userType,
     );
   }
 }
@@ -25,10 +25,12 @@ class SignUpParams {
   final String email;
   final String password;
   final String? displayName;
+  final UserType userType;
 
   SignUpParams({
     required this.email,
     required this.password,
     this.displayName,
+    required this.userType,
   });
 }
