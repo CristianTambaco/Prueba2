@@ -110,15 +110,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<UserModel?> getCurrentUser() async {
-    try {
-      final user = supabaseClient.auth.currentUser;
-      if (user == null) return null;
-      return UserModel.fromSupabaseUser(user);
-    } catch (e) {
-      throw Exception('Error al obtener usuario actual: $e');
-    }
+Future<UserModel?> getCurrentUser() async {
+  try {
+    final user = supabaseClient.auth.currentUser;
+    // Devolver usuario si ha verificado su email
+    if (user == null || user.emailConfirmedAt == null) return null;
+    return UserModel.fromSupabaseUser(user);
+  } catch (e) {
+    throw Exception('Error al obtener usuario actual: $e');
   }
+}
 
   @override
   Stream<UserModel?> get authStateChanges {

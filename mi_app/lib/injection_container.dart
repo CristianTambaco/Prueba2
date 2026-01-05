@@ -5,6 +5,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/app_constants.dart';
 import 'injection_container.config.dart';
 
+
+import 'features/pet/domain/repositories/pet_repository.dart';
+import 'features/pet/data/repositories/pet_repository_impl.dart';
+
 final getIt = GetIt.instance;
 
 @InjectableInit()
@@ -19,6 +23,15 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
   getIt.registerLazySingleton<Connectivity>(() => Connectivity());
 
+
+  // Pet Repository
+getIt.registerLazySingleton<PetRepository>(
+  () => PetRepositoryImpl(getIt<SupabaseClient>()),
+);
+
+
+
   // Initialize injectable
   getIt.init();
 }
+
