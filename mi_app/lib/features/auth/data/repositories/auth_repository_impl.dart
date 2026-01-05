@@ -5,15 +5,21 @@ import '../../../../core/network/network_info.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
+import '../../data/models/user_model.dart'; // 👈 Importa UserModel
+import 'package:supabase/supabase.dart'; // 👈 Importa SupabaseClient
+
+import '../../../../injection_container.dart'; // 👈 Importa getIt
 
 @LazySingleton(as: AuthRepository)
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
   final NetworkInfo networkInfo;
+  final SupabaseClient supabaseClient; // 👈 Inyecta SupabaseClient
 
   AuthRepositoryImpl({
     required this.remoteDataSource,
     required this.networkInfo,
+    required this.supabaseClient, // 👈 Asegúrate de que se inyecte
   });
 
   @override
@@ -38,26 +44,42 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, UserEntity>> signUpWithEmailAndPassword({
-  required String email,
-  required String password,
-  String? displayName,
-  required UserType userType,
-}) async {
-  if (!await networkInfo.isConnected) {
-    return const Left(NetworkFailure('Sin conexión a internet'));
+    required String email,
+    required String password,
+    String? displayName,
+    required UserType userType,
+  }) async {
+    if (!await networkInfo.isConnected) {
+      return const Left(NetworkFailure('Sin conexión a internet'));
+    }
+    try {
+      final response = await supabaseClient.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'display_name': displayName,
+          'user_type': userType.name,
+        },
+      );
+      if (response.user == null) {
+        throw Exception('No se pudo crear la cuenta');
+      }
+
+      // 👇 Crea el perfil en la tabla profiles
+      final userId = response.user!.id;
+      await supabaseClient.from('profiles').upsert({
+        'id': userId,
+        'email': email,
+        'display_name': displayName,
+        'user_type': userType.name,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      return Right(UserModel.fromSupabaseUser(response.user!).toEntity());
+    } catch (e) {
+      return Left(AuthFailure(e.toString()));
+    }
   }
-  try {
-    final user = await remoteDataSource.signUpWithEmailAndPassword(
-      email: email,
-      password: password,
-      displayName: displayName,
-      userType: userType,
-    );
-    return Right(user);
-  } catch (e) {
-    return Left(AuthFailure(e.toString()));
-  }
-}
 
   @override
   Future<Either<Failure, void>> sendPasswordResetEmail({

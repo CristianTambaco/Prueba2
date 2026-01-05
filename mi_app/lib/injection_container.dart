@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/app_constants.dart';
 import 'injection_container.config.dart';
 
+import 'package:supabase/supabase.dart';
+
 // Importa los nuevos repositorios
 import 'features/pet/domain/repositories/pet_repository.dart';
 import 'features/pet/data/repositories/pet_repository_impl.dart';

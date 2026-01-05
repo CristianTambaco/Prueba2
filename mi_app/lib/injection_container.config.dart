@@ -28,6 +28,7 @@ import 'package:login_pro/features/auth/domain/usecases/sign_out.dart' as _i427;
 import 'package:login_pro/features/auth/domain/usecases/sign_up.dart' as _i369;
 import 'package:login_pro/features/auth/presentation/bloc/auth_bloc.dart'
     as _i746;
+import 'package:supabase/supabase.dart' as _i590;
 import 'package:supabase_flutter/supabase_flutter.dart' as _i454;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -48,6 +49,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i638.AuthRepository>(() => _i12.AuthRepositoryImpl(
           remoteDataSource: gh<_i383.AuthRemoteDataSource>(),
           networkInfo: gh<_i505.NetworkInfo>(),
+          supabaseClient: gh<_i590.SupabaseClient>(),
         ));
     gh.factory<_i496.GetCurrentUser>(
         () => _i496.GetCurrentUser(gh<_i638.AuthRepository>()));

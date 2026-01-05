@@ -5,9 +5,13 @@ import '../../../../injection_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-import '../pages/add_pet_page.dart'; // ✅ Importa la nueva página
+
 import '../../../adoption_request/domain/entities/adoption_request_entity.dart';
-import '../../../adoption_request/domain/repositories/adoption_request_repository.dart'; // ✅ Importa el repositorio
+import '../../../adoption_request/domain/repositories/adoption_request_repository.dart'; // 
+
+import '../pages/shelter_pets_page.dart'; // 
+
+
 
 class ShelterHomePage extends StatelessWidget {
   const ShelterHomePage({super.key});
@@ -151,30 +155,38 @@ class ShelterHomePage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: const Color(0xFF6C5CE7),
-        unselectedItemColor: const Color(0xFF636E72),
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Inicio',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.pets_outlined),
-            label: 'Mascotas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_outlined),
-            label: 'Solicitudes',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Perfil',
-          ),
-        ],
-      ),
+  currentIndex: 0,
+  selectedItemColor: const Color(0xFF6C5CE7),
+  unselectedItemColor: const Color(0xFF636E72),
+  showSelectedLabels: true,
+  showUnselectedLabels: true,
+  items: const [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.home_outlined),
+      label: 'Inicio',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.pets_outlined), // 👈 Cambiado a ícono de mascotas
+      label: 'Mascotas', // 👈 Nuevo texto
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.notifications_outlined),
+      label: 'Solicitudes',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person_outline),
+      label: 'Perfil',
+    ),
+  ],
+  onTap: (index) {
+    if (index == 1) { // Navegar a la página de mascotas
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ShelterPetsPage()),
+      );
+    }
+  },
+),
     );
   }
 
