@@ -6,6 +6,10 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 
+import '../../../pet/domain/entities/pet_entity.dart';
+import '../../../pet/domain/repositories/pet_repository.dart';
+
+
 class AdopterHomePage extends StatelessWidget {
   const AdopterHomePage({super.key});
 
