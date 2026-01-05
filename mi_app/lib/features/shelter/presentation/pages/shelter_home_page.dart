@@ -6,6 +6,8 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../pages/add_pet_page.dart'; // ✅ Importa la nueva página
+import '../../../adoption_request/domain/entities/adoption_request_entity.dart';
+import '../../../adoption_request/domain/repositories/adoption_request_repository.dart'; // ✅ Importa el repositorio
 
 class ShelterHomePage extends StatelessWidget {
   const ShelterHomePage({super.key});
@@ -109,43 +111,39 @@ class ShelterHomePage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    _buildRequestCard('Luna', 'Juan Pérez', true),
-                    const SizedBox(height: 16),
-                    _buildRequestCard('Rocky', 'María García', false),
-                    const SizedBox(height: 24),
-                    // Mis Mascotas
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Mis Mascotas',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const AddPetPage()),
-                            );
+                child: FutureBuilder<List<AdoptionRequestEntity>>(
+                  future: getIt<AdoptionRequestRepository>()
+                      .getRequestsByShelter(user?.id ?? '')
+                      .then((r) => r.fold((l) => [], (r) => r)),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final requests = snapshot.data ?? [];
+                    return ListView.builder(
+                      itemCount: requests.length,
+                      itemBuilder: (context, index) {
+                        final req = requests[index];
+                        return _buildRequestCard(
+                          petName: req.petName,
+                          requester: req.adopterName,
+                          approved: req.status == AdoptionStatus.approved,
+                          onApprove: () async {
+                            await getIt<AdoptionRequestRepository>().updateStatus(req.id, AdoptionStatus.approved);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aprobada')));
+                            }
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF00B894),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          icon: const Icon(Icons.add, size: 16),
-                          label: const Text('Agregar'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPetCard('Luna', 'Disponible'),
-                  ],
+                          onReject: () async {
+                            await getIt<AdoptionRequestRepository>().updateStatus(req.id, AdoptionStatus.rejected);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rechazada')));
+                            }
+                          },
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -219,7 +217,13 @@ class ShelterHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildRequestCard(String petName, String requester, bool approved) {
+  Widget _buildRequestCard({
+    required String petName,
+    required String requester,
+    required bool approved,
+    required VoidCallback onApprove,
+    required VoidCallback onReject,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -258,17 +262,11 @@ class ShelterHomePage extends StatelessWidget {
               children: [
                 Text(
                   'Solicitud para $petName',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
                   'De: $requester',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF636E72),
-                  ),
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF636E72)),
                 ),
               ],
             ),
@@ -277,86 +275,11 @@ class ShelterHomePage extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.check_circle_outline, color: Color(0xFF00D2A1)),
-                onPressed: () {},
+                onPressed: onApprove,
               ),
               IconButton(
                 icon: const Icon(Icons.cancel_outlined, color: Color(0xFFFF6B6B)),
-                onPressed: () {},
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPetCard(String name, String status) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F8FF),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: Image.asset(
-                'assets/images/dog.png',
-                width: 30,
-                height: 30,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  status,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF00D2A1),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove_red_eye_outlined, color: Color(0xFF636E72)),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, color: Color(0xFF636E72)),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: Color(0xFFFF6B6B)),
-                onPressed: () {},
+                onPressed: onReject,
               ),
             ],
           ),

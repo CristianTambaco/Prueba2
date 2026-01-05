@@ -5,33 +5,34 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/app_constants.dart';
 import 'injection_container.config.dart';
 
-
+// Importa los nuevos repositorios
 import 'features/pet/domain/repositories/pet_repository.dart';
 import 'features/pet/data/repositories/pet_repository_impl.dart';
+import 'features/adoption_request/domain/repositories/adoption_request_repository.dart'; // ✅
+import 'features/adoption_request/data/repositories/adoption_request_repository_impl.dart'; // ✅
 
 final getIt = GetIt.instance;
 
 @InjectableInit()
 Future<void> configureDependencies() async {
-  // Initialize Supabase
   await Supabase.initialize(
     url: AppConstants.supabaseUrl,
     anonKey: AppConstants.supabaseAnonKey,
   );
 
-  // Register external dependencies
   getIt.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
   getIt.registerLazySingleton<Connectivity>(() => Connectivity());
 
-
   // Pet Repository
-getIt.registerLazySingleton<PetRepository>(
-  () => PetRepositoryImpl(getIt<SupabaseClient>()),
-);
+  getIt.registerLazySingleton<PetRepository>(
+    () => PetRepositoryImpl(getIt<SupabaseClient>()),
+  );
 
-
+  // Adoption Request Repository ✅
+  getIt.registerLazySingleton<AdoptionRequestRepository>(
+    () => AdoptionRequestRepositoryImpl(getIt<SupabaseClient>()),
+  );
 
   // Initialize injectable
   getIt.init();
 }
-

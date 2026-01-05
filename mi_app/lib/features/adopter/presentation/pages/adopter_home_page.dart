@@ -10,6 +10,10 @@ import '../../../pet/domain/entities/pet_entity.dart';
 import '../../../pet/domain/repositories/pet_repository.dart';
 
 
+import '../../../adoption_request/domain/repositories/adoption_request_repository.dart';
+
+
+
 class AdopterHomePage extends StatelessWidget {
   const AdopterHomePage({super.key});
 
@@ -39,8 +43,8 @@ class AdopterHomePage extends StatelessWidget {
                     TextButton(
                       onPressed: () {
                         context.read<AuthBloc>().add(const SignOutRequested());
-                        Navigator.pop(context); // Cierra el diálogo
-                        Navigator.pushReplacementNamed(context, '/login'); // Redirige a login
+                        Navigator.pop(context);
+                        Navigator.pushReplacementNamed(context, '/login');
                       },
                       child: const Text('Cerrar sesión', style: TextStyle(color: Colors.red)),
                     ),
@@ -57,7 +61,6 @@ class AdopterHomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Saludo personalizado
               Row(
                 children: [
                   Text(
@@ -69,15 +72,11 @@ class AdopterHomePage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-
-              // Título principal
               const Text(
                 'Encuentra tu mascota',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-
-              // Campo de búsqueda
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -101,8 +100,6 @@ class AdopterHomePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Botones de filtro
               Row(
                 children: [
                   _buildFilterButton('Todos', true),
@@ -113,48 +110,22 @@ class AdopterHomePage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-
-              // Cuadrícula de mascotas (ejemplo estático)
               Expanded(
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.0,
-                  children: [
-                    _buildPetCard(
-                      name: 'Luna',
-                      type: 'Labrador',
-                      age: '2 años',
-                      distance: '2.5 km',
-                      image: 'assets/images/dog.png',
-                      isLiked: true,
-                    ),
-                    _buildPetCard(
-                      name: 'Michi',
-                      type: 'Persa',
-                      age: '1 año',
-                      distance: '2.5 km',
-                      image: 'assets/images/cat.png',
-                      isLiked: false,
-                    ),
-                    _buildPetCard(
-                      name: 'Max',
-                      type: 'Golden Retriever',
-                      age: '3 años',
-                      distance: '3.0 km',
-                      image: 'assets/images/dog2.png',
-                      isLiked: false,
-                    ),
-                    _buildPetCard(
-                      name: 'Mimi',
-                      type: 'Siamés',
-                      age: '6 meses',
-                      distance: '1.8 km',
-                      image: 'assets/images/cat2.png',
-                      isLiked: true,
-                    ),
-                  ],
+                child: FutureBuilder<List<PetEntity>>(
+                  future: getIt<PetRepository>().getAllPets().then((r) => r.fold((l) => [], (r) => r)),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final pets = snapshot.data ?? [];
+                    return GridView.count(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 1.0,
+                      children: pets.map((pet) => _buildPetCard(pet: pet, context: context)).toList(),
+                    );
+                  },
                 ),
               ),
             ],
@@ -168,26 +139,11 @@ class AdopterHomePage extends StatelessWidget {
         showSelectedLabels: true,
         showUnselectedLabels: true,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Inicio',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.location_on_outlined),
-            label: 'Mapa',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            label: 'Chat IA',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            label: 'Solicitudes',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Perfil',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Inicio'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on_outlined), label: 'Mapa'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Chat IA'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Solicitudes'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
         ],
       ),
     );
@@ -201,9 +157,7 @@ class AdopterHomePage extends StatelessWidget {
         foregroundColor: isSelected ? Colors.white : const Color(0xFF2D3436),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isSelected ? Colors.transparent : const Color(0xFFE0E0E0),
-          ),
+          side: BorderSide(color: isSelected ? Colors.transparent : const Color(0xFFE0E0E0)),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -212,14 +166,10 @@ class AdopterHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildPetCard({
-    required String name,
-    required String type,
-    required String age,
-    required String distance,
-    required String image,
-    required bool isLiked,
-  }) {
+  Widget _buildPetCard({required PetEntity pet, required BuildContext context}) {
+    final authBloc = context.read<AuthBloc>();
+    final user = authBloc.state is AuthAuthenticated ? (authBloc.state as AuthAuthenticated).user : null;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -234,53 +184,56 @@ class AdopterHomePage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Imagen de la mascota
           Container(
             height: 80,
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              color: isLiked ? const Color(0xFFFFE0E0) : const Color(0xFFF0F8FF),
+              image: pet.imageUrl != null
+                  ? DecorationImage(image: NetworkImage(pet.imageUrl!), fit: BoxFit.cover)
+                  : null,
+              color: pet.imageUrl == null ? Colors.grey[200] : null,
             ),
-            child: Center(
-              child: Image.asset(
-                image,
-                width: 50,
-                height: 50,
-                fit: BoxFit.contain,
-              ),
-            ),
+            child: pet.imageUrl == null
+                ? const Icon(Icons.pets, size: 40, color: Colors.grey)
+                : null,
           ),
           const SizedBox(height: 8),
-          // Nombre y tipo
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '$type • $age',
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF636E72)),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 16, color: Color(0xFF636E72)),
-                    const SizedBox(width: 4),
-                    Text(
-                      distance,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF636E72)),
-                    ),
-                    const Spacer(),
-                    Icon(
-                      isLiked ? Icons.favorite : Icons.favorite_border,
-                      color: isLiked ? const Color(0xFFFF6B6B) : const Color(0xFF636E72),
-                    ),
-                  ],
+                Text(pet.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('${pet.type} • ${pet.age} años', style: const TextStyle(fontSize: 14, color: Color(0xFF636E72))),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: user != null
+                      ? () async {
+                          final result = await getIt<AdoptionRequestRepository>().createRequest(
+                            petId: pet.id,
+                            petName: pet.name,
+                            adopterId: user.id,
+                            adopterName: user.displayName ?? user.email.split('@').first,
+                            shelterId: pet.shelterId,
+                          );
+                          if (result.isRight()) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Solicitud enviada con éxito')),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: ${result.fold((l) => l.message, (_) => '')}')),
+                            );
+                          }
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF8C42),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.pets, size: 16),
+                  label: const Text('Solicitar'),
                 ),
               ],
             ),
