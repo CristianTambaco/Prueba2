@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:login_pro/features/auth/presentation/pages/profile_page.dart';
 
 import '../../../../injection_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -260,6 +261,11 @@ class ShelterHomePage extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AllAdoptionRequestsPage()),
+            );
+          } else if (index == 3) { 
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfilePage()),
             );
           }
         },

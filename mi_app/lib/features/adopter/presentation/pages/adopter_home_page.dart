@@ -1,6 +1,7 @@
 // lib/features/adopter/presentation/pages/adopter_home_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:login_pro/features/auth/presentation/pages/profile_page.dart';
 import '../../../../injection_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -11,7 +12,7 @@ import '../../../adoption_request/domain/repositories/adoption_request_repositor
 import '../../../gemini_chat/presentation/screens/chat_screen.dart';
 import '../../../gemini_chat/cubits/chat_cubit.dart';
 import '../../../gemini_chat/services/gemini_service.dart';
-import '../pages/my_adoption_requests_page.dart'; // 🆕 Importa la nueva página
+import '../pages/my_adoption_requests_page.dart'; // 
 
 class AdopterHomePage extends StatefulWidget {
   const AdopterHomePage({super.key});
@@ -49,6 +50,12 @@ class _AdopterHomePageState extends State<AdopterHomePage> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const MyAdoptionRequestsPage()),
+      );
+    } else if (index == 4) {
+      
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ProfilePage()),
       );
     }
   }
