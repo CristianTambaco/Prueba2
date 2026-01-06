@@ -1,15 +1,12 @@
-// lib/features/shelter/presentation/pages/add_pet_page.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:camera/camera.dart'; //  Importa la cámara
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-// 👇 Importa AuthAuthenticated aquí
-import '../../../auth/presentation/bloc/auth_state.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
-
 import '../../../../injection_container.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../pet/domain/entities/pet_entity.dart';
 import '../../../pet/domain/repositories/pet_repository.dart';
 
@@ -28,8 +25,41 @@ class _AddPetPageState extends State<AddPetPage> {
   String? _type;
   File? _imageFile;
 
+  // 📷 Estado de la cámara
+  CameraController? _cameraController;
+  List<CameraDescription>? _cameras;
+  bool _isCameraReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      _cameras = await availableCameras();
+      if (_cameras != null && _cameras!.isNotEmpty) {
+        _cameraController = CameraController(
+          _cameras![0],
+          ResolutionPreset.medium,
+        );
+        await _cameraController?.initialize();
+        setState(() {
+          _isCameraReady = true;
+        });
+      }
+    } catch (e) {
+      // Si no hay cámara o falla, no hacemos nada. La galería sigue disponible.
+      setState(() {
+        _isCameraReady = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
+    _cameraController?.dispose();
     _nameController.dispose();
     _descriptionController.dispose();
     _ageController.dispose();
@@ -46,12 +76,28 @@ class _AddPetPageState extends State<AddPetPage> {
     }
   }
 
+  Future<void> _takePhoto() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+
+    try {
+      final XFile photo = await _cameraController!.takePicture();
+      setState(() {
+        _imageFile = File(photo.path);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al tomar la foto: $e')),
+      );
+    }
+  }
+
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() == true) {
       final user = context.read<AuthBloc>().state is AuthAuthenticated
           ? (context.read<AuthBloc>().state as AuthAuthenticated).user
           : null;
-
       if (user == null) return;
 
       final pet = PetEntity(
@@ -68,7 +114,6 @@ class _AddPetPageState extends State<AddPetPage> {
       try {
         final repository = getIt<PetRepository>();
         final result = await repository.createPet(pet, _imageFile?.path ?? '');
-
         if (result.isRight()) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Mascota agregada con éxito')),
@@ -119,11 +164,15 @@ class _AddPetPageState extends State<AddPetPage> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.camera_alt, size: 48, color: Colors.grey[600]),
+                                const Icon(
+                                  Icons.camera_alt,
+                                  size: 48,
+                                  color: Colors.grey,
+                                ),
                                 const SizedBox(height: 8),
-                                Text(
+                                const Text(
                                   'Selecciona una imagen',
-                                  style: TextStyle(color: Colors.grey[600]),
+                                  style: TextStyle(color: Colors.grey),
                                 ),
                               ],
                             ),
@@ -132,6 +181,19 @@ class _AddPetPageState extends State<AddPetPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                // Botón para tomar foto (solo si la cámara está disponible)
+                if (_isCameraReady)
+                  ElevatedButton.icon(
+                    onPressed: _takePhoto,
+                    icon: const Icon(Icons.camera),
+                    label: const Text('Tomar foto'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                const SizedBox(height: 16),
 
                 // Nombre
                 TextFormField(
