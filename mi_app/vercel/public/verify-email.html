@@ -167,7 +167,9 @@
             SUPABASE_URL,
             SUPABASE_ANON_KEY
           );
-          initApp();
+
+          // Iniciar la verificación
+          verifyEmail();
         } catch (error) {
           showError("Error al cargar la configuración: " + error.message);
         }
