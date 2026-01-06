@@ -127,7 +127,7 @@ class AdopterHomePage extends StatelessWidget {
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: 1.0,
+                      childAspectRatio: 0.7,
                       children: pets.map((pet) => _buildPetCard(pet: pet, context: context)).toList(),
                     );
                   },
