@@ -87,31 +87,39 @@ class _MyAdoptionRequestsPageState extends State<MyAdoptionRequestsPage> {
     }
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        leading: const Icon(Icons.pets, color: Colors.grey),
-        title: Text('Solicitud para: ${req.petName}'),
-        subtitle: Text('Refugio ID: ${req.shelterId}'),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  child: Padding(
+    padding: const EdgeInsets.all(12),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.pets, color: Colors.grey),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Solicitud para: ${req.petName}',
+                  style: Theme.of(context).textTheme.titleMedium),
+              Text('Refugio ID: ${req.shelterId}'),
+            ],
+          ),
+        ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Chip(
               label: Text(statusText),
               backgroundColor: statusColor.withOpacity(0.2),
               labelStyle: TextStyle(color: statusColor),
-            ),
-            if (req.status == AdoptionStatus.pending)
-              TextButton(
-                onPressed: () => _cancelRequest(req.id),
-                child: const Text(
-                  'Cancelar',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
+            ),            
           ],
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
+
   }
 
   Future<void> _cancelRequest(String requestId) async {
