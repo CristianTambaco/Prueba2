@@ -1,17 +1,16 @@
 // lib/features/shelter/presentation/pages/shelter_home_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-
 import '../../../adoption_request/domain/entities/adoption_request_entity.dart';
-import '../../../adoption_request/domain/repositories/adoption_request_repository.dart'; // 
+import '../../../adoption_request/domain/repositories/adoption_request_repository.dart';
+import '../pages/shelter_pets_page.dart';
 
-import '../pages/shelter_pets_page.dart'; // 
-
-
+import '../pages/all_adoption_requests_page.dart';
 
 class ShelterHomePage extends StatelessWidget {
   const ShelterHomePage({super.key});
@@ -21,7 +20,6 @@ class ShelterHomePage extends StatelessWidget {
     final user = context.read<AuthBloc>().state is AuthAuthenticated
         ? (context.read<AuthBloc>().state as AuthAuthenticated).user
         : null;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inicio - Refugio'),
@@ -72,7 +70,6 @@ class ShelterHomePage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-
               // Título principal
               const Text(
                 'Refugio Patitas Felices',
@@ -83,7 +80,6 @@ class ShelterHomePage extends StatelessWidget {
                 style: TextStyle(fontSize: 16, color: Color(0xFF636E72)),
               ),
               const SizedBox(height: 16),
-
               // Estadísticas
               Row(
                 children: [
@@ -95,7 +91,6 @@ class ShelterHomePage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-
               // Solicitudes Recientes
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -105,7 +100,13 @@ class ShelterHomePage extends StatelessWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      // Navegar a la nueva pantalla de todas las solicitudes
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AllAdoptionRequestsPage()),
+                      );
+                    },
                     child: const Text(
                       'Ver todas',
                       style: TextStyle(color: Color(0xFFFF6B6B)),
@@ -131,7 +132,7 @@ class ShelterHomePage extends StatelessWidget {
                         return _buildRequestCard(
                           petName: req.petName,
                           requester: req.adopterName,
-                          approved: req.status == AdoptionStatus.approved,
+                          status: req.status,
                           onApprove: () async {
                             await getIt<AdoptionRequestRepository>().updateStatus(req.id, AdoptionStatus.approved);
                             if (context.mounted) {
@@ -155,38 +156,43 @@ class ShelterHomePage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-  currentIndex: 0,
-  selectedItemColor: const Color(0xFF6C5CE7),
-  unselectedItemColor: const Color(0xFF636E72),
-  showSelectedLabels: true,
-  showUnselectedLabels: true,
-  items: const [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home_outlined),
-      label: 'Inicio',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.pets_outlined), // 👈 Cambiado a ícono de mascotas
-      label: 'Mascotas', // 👈 Nuevo texto
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.notifications_outlined),
-      label: 'Solicitudes',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person_outline),
-      label: 'Perfil',
-    ),
-  ],
-  onTap: (index) {
-    if (index == 1) { // Navegar a la página de mascotas
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ShelterPetsPage()),
-      );
-    }
-  },
-),
+        currentIndex: 0,
+        selectedItemColor: const Color(0xFF6C5CE7),
+        unselectedItemColor: const Color(0xFF636E72),
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Inicio',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.pets_outlined),
+            label: 'Mascotas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_outlined),
+            label: 'Solicitudes',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Perfil',
+          ),
+        ],
+        onTap: (index) {
+          if (index == 1) { // Navegar a la página de mascotas
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ShelterPetsPage()),
+            );
+          } else if (index == 2) { // Navegar a la página de solicitudes
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AllAdoptionRequestsPage()),
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -232,14 +238,34 @@ class ShelterHomePage extends StatelessWidget {
   Widget _buildRequestCard({
     required String petName,
     required String requester,
-    required bool approved,
+    required AdoptionStatus status,
     required VoidCallback onApprove,
     required VoidCallback onReject,
   }) {
+    Color cardColor = Colors.white;
+    Color statusIconColor = Colors.grey;
+
+    switch (status) {
+      case AdoptionStatus.pending:
+        cardColor = Colors.yellow[50]!;
+        statusIconColor = Colors.yellow[700]!;
+        break;
+      case AdoptionStatus.approved:
+        cardColor = Colors.green[50]!;
+        statusIconColor = Colors.green[700]!;
+        break;
+      case AdoptionStatus.rejected:
+        cardColor = Colors.red[50]!;
+        statusIconColor = Colors.red[700]!;
+        break;
+    }
+
     return Container(
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: statusIconColor.withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -259,12 +285,7 @@ class ShelterHomePage extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
-              child: Image.asset(
-                'assets/images/dog.png',
-                width: 30,
-                height: 30,
-                fit: BoxFit.contain,
-              ),
+              child: Icon(Icons.pets, size: 20, color: Colors.grey[600]),
             ),
           ),
           const SizedBox(width: 16),
@@ -280,19 +301,42 @@ class ShelterHomePage extends StatelessWidget {
                   'De: $requester',
                   style: const TextStyle(fontSize: 14, color: Color(0xFF636E72)),
                 ),
+                const SizedBox(height: 4),
+                Chip(
+                  label: Text(
+                    status.name.toUpperCase(),
+                    style: TextStyle(
+                      color: statusIconColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  backgroundColor: statusIconColor.withOpacity(0.1),
+                ),
               ],
             ),
           ),
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.check_circle_outline, color: Color(0xFF00D2A1)),
-                onPressed: onApprove,
-              ),
-              IconButton(
-                icon: const Icon(Icons.cancel_outlined, color: Color(0xFFFF6B6B)),
-                onPressed: onReject,
-              ),
+              if (status == AdoptionStatus.pending)
+                IconButton(
+                  icon: const Icon(Icons.check_circle_outline, color: Color(0xFF00D2A1)),
+                  onPressed: onApprove,
+                  tooltip: 'Aprobar',
+                ),
+              if (status == AdoptionStatus.pending)
+                IconButton(
+                  icon: const Icon(Icons.cancel_outlined, color: Color(0xFFFF6B6B)),
+                  onPressed: onReject,
+                  tooltip: 'Rechazar',
+                ),
+              if (status != AdoptionStatus.pending)
+                Icon(
+                  status == AdoptionStatus.approved
+                      ? Icons.check_circle
+                      : Icons.cancel,
+                  color: statusIconColor,
+                  size: 24,
+                ),
             ],
           ),
         ],
