@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
     return BlocProvider(
       create: (_) => getIt<AuthBloc>()..add(const AuthCheckRequested()),
       child: MaterialApp(
-        title: 'Login Pro',
+        title: 'Login ',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: BlocBuilder<AuthBloc, AuthState>(
