@@ -1,6 +1,7 @@
 // lib/features/adopter/presentation/pages/adopter_home_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../injection_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -8,16 +9,11 @@ import '../../../auth/presentation/bloc/auth_state.dart';
 
 import '../../../pet/domain/entities/pet_entity.dart';
 import '../../../pet/domain/repositories/pet_repository.dart';
-
-
 import '../../../adoption_request/domain/repositories/adoption_request_repository.dart';
 
 import '../../../gemini_chat/presentation/screens/chat_screen.dart';
-
-
 import '../../../gemini_chat/cubits/chat_cubit.dart';
 import '../../../gemini_chat/services/gemini_service.dart';
-
 
 class AdopterHomePage extends StatelessWidget {
   const AdopterHomePage({super.key});
@@ -37,7 +33,7 @@ class AdopterHomePage extends StatelessWidget {
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (context) => AlertDialog(
+                builder: (_) => AlertDialog(
                   title: const Text('¿Cerrar sesión?'),
                   content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
                   actions: [
@@ -51,7 +47,10 @@ class AdopterHomePage extends StatelessWidget {
                         Navigator.pop(context);
                         Navigator.pushReplacementNamed(context, '/login');
                       },
-                      child: const Text('Cerrar sesión', style: TextStyle(color: Colors.red)),
+                      child: const Text(
+                        'Cerrar sesión',
+                        style: TextStyle(color: Colors.red),
+                      ),
                     ),
                   ],
                 ),
@@ -60,81 +59,117 @@ class AdopterHomePage extends StatelessWidget {
           ),
         ],
       ),
+
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    'Hola, ${user?.displayName ?? user?.email.split('@').first}',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('👋', style: TextStyle(fontSize: 20)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Encuentra tu mascota',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+        child: FutureBuilder<List<PetEntity>>(
+          future: getIt<PetRepository>()
+              .getAllPets()
+              .then((r) => r.fold((l) => [], (r) => r)),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final pets = snapshot.data ?? [];
+
+            return CustomScrollView(
+              slivers: [
+                /// ---------- HEADER ----------
+                SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Hola, ${user?.displayName ?? user?.email.split('@').first}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('👋', style: TextStyle(fontSize: 20)),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Encuentra tu mascota',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // 🔍 Search
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const TextField(
+                            decoration: InputDecoration(
+                              prefixIcon: Icon(Icons.search, color: Color(0xFF636E72)),
+                              hintText: 'Buscar mascota...',
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // 🏷 Filters
+                        Row(
+                          children: [
+                            _buildFilterButton('Todos', true),
+                            const SizedBox(width: 8),
+                            _buildFilterButton('Perros', false),
+                            const SizedBox(width: 8),
+                            _buildFilterButton('Gatos', false),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search, color: Color(0xFF636E72)),
-                    hintText: 'Buscar mascota...',
-                    hintStyle: const TextStyle(color: Color(0xFFB2BEC3)),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _buildFilterButton('Todos', true),
-                  const SizedBox(width: 8),
-                  _buildFilterButton('Perros', false),
-                  const SizedBox(width: 8),
-                  _buildFilterButton('Gatos', false),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: FutureBuilder<List<PetEntity>>(
-                  future: getIt<PetRepository>().getAllPets().then((r) => r.fold((l) => [], (r) => r)),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final pets = snapshot.data ?? [];
-                    return GridView.count(
+
+                /// ---------- GRID ----------
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return _buildPetCard(
+                          pet: pets[index],
+                          context: context,
+                        );
+                      },
+                      childCount: pets.length,
+                    ),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
                       childAspectRatio: 0.7,
-                      children: pets.map((pet) => _buildPetCard(pet: pet, context: context)).toList(),
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
