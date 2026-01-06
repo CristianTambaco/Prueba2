@@ -6,11 +6,11 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
-import 'features/auth/presentation/pages/welcome_page.dart';
+
 import 'injection_container.dart';
 import 'features/auth/domain/entities/user_entity.dart'; 
-import 'features/adopter/presentation/pages/adopter_home_page.dart'; // ✅
-import 'features/shelter/presentation/pages/shelter_home_page.dart'; // ✅
+import 'features/adopter/presentation/pages/adopter_home_page.dart'; 
+import 'features/shelter/presentation/pages/shelter_home_page.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
