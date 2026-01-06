@@ -16,224 +16,259 @@ class ShelterHomePage extends StatelessWidget {
   const ShelterHomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final user = context.read<AuthBloc>().state is AuthAuthenticated
-        ? (context.read<AuthBloc>().state as AuthAuthenticated).user
-        : null;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inicio - Refugio'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('¿Cerrar sesión?'),
-                  content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancelar'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        context.read<AuthBloc>().add(const SignOutRequested());
-                        Navigator.pop(context);
-                        Navigator.pushReplacementNamed(context, '/login');
-                      },
-                      child: const Text('Cerrar sesión', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Saludo personalizado
-              Row(
-                children: [
-                  Text(
-                    'Bienvenido, ${user?.displayName ?? user?.email.split('@').first}',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('👋', style: TextStyle(fontSize: 20)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Título principal
-              const Text(
-                'Refugio Patitas Felices',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const Text(
-                'Panel de administración',
-                style: TextStyle(fontSize: 16, color: Color(0xFF636E72)),
-              ),
-              const SizedBox(height: 16),
-              // Estadísticas
-              Row(
-                children: [
-                  _buildStatCard('15', 'Mascotas'),
-                  const SizedBox(width: 8),
-                  _buildStatCard('8', 'Pendientes'),
-                  const SizedBox(width: 8),
-                  _buildStatCard('23', 'Adoptadas'),
-                ],
-              ),
-              const SizedBox(height: 24),
-              // Solicitudes Recientes
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Solicitudes Recientes',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+Widget build(BuildContext context) {
+  final user = context.read<AuthBloc>().state is AuthAuthenticated
+      ? (context.read<AuthBloc>().state as AuthAuthenticated).user
+      : null;
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Inicio - Refugio'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('¿Cerrar sesión?'),
+                content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancelar'),
                   ),
                   TextButton(
                     onPressed: () {
-                      // Navegar a la nueva pantalla de todas las solicitudes
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const AllAdoptionRequestsPage()),
-                      );
+                      context.read<AuthBloc>().add(const SignOutRequested());
+                      Navigator.pop(context);
+                      Navigator.pushReplacementNamed(context, '/login');
                     },
-                    child: const Text(
-                      'Ver todas',
-                      style: TextStyle(color: Color(0xFFFF6B6B)),
-                    ),
+                    child: const Text('Cerrar sesión', style: TextStyle(color: Colors.red)),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: FutureBuilder<List<AdoptionRequestEntity>>(
-                  future: getIt<AdoptionRequestRepository>()
-                      .getRequestsByShelter(user?.id ?? '')
-                      .then((r) => r.fold((l) => [], (r) => r)),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final requests = snapshot.data ?? [];
-                    return ListView.builder(
-                      itemCount: requests.length,
-                      itemBuilder: (context, index) {
-                        final req = requests[index];
-                        return _buildRequestCard(
-                          petName: req.petName,
-                          requester: req.adopterName,
-                          status: req.status,
-                          onApprove: () async {
-                            await getIt<AdoptionRequestRepository>().updateStatus(req.id, AdoptionStatus.approved);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aprobada')));
-                            }
-                          },
-                          onReject: () async {
-                            await getIt<AdoptionRequestRepository>().updateStatus(req.id, AdoptionStatus.rejected);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rechazada')));
-                            }
-                          },
-                        );
-                      },
+            );
+          },
+        ),
+      ],
+    ),
+    body: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Saludo personalizado
+            Row(
+              children: [
+                Text(
+                  'Bienvenido, ${user?.displayName ?? user?.email.split('@').first}',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: 8),
+                const Text('👋', style: TextStyle(fontSize: 20)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Título principal
+            const Text(
+              'Refugio Patitas Felices',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+            const Text(
+              'Panel de administración',
+              style: TextStyle(fontSize: 16, color: Color(0xFF636E72)),
+            ),
+            const SizedBox(height: 16),
+            // Estadísticas DINÁMICAS
+            FutureBuilder<List<AdoptionRequestEntity>>(
+              future: getIt<AdoptionRequestRepository>()
+                  .getRequestsByShelter(user?.id ?? '')
+                  .then((r) => r.fold((l) => [], (r) => r)),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final requests = snapshot.data ?? [];
+                final pending = requests.where((req) => req.status == AdoptionStatus.pending).length;
+                final approved = requests.where((req) => req.status == AdoptionStatus.approved).length;
+
+                return Row(
+                  children: [
+                    _buildStatCard(
+                      count: '${pending}', // 🟡 Pendientes
+                      label: 'Pendientes',
+                      color: Colors.yellow[50]!,
+                      iconColor: Colors.yellow[700]!,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildStatCard(
+                      count: '${approved}', // 🟢 Aprobadas (adoptadas)
+                      label: 'Adoptadas',
+                      color: Colors.green[50]!,
+                      iconColor: Colors.green[700]!,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildStatCard(
+                      count: '${requests.length}', // 🔵 Total de solicitudes
+                      label: 'Solicitudes',
+                      color: Colors.blue[50]!,
+                      iconColor: Colors.blue[700]!,
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            // Solicitudes Recientes
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Solicitudes Recientes',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AllAdoptionRequestsPage()),
                     );
                   },
+                  child: const Text(
+                    'Ver todas',
+                    style: TextStyle(color: Color(0xFFFF6B6B)),
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: FutureBuilder<List<AdoptionRequestEntity>>(
+                future: getIt<AdoptionRequestRepository>()
+                    .getRequestsByShelter(user?.id ?? '')
+                    .then((r) => r.fold((l) => [], (r) => r)),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final requests = snapshot.data ?? [];
+                  return ListView.builder(
+                    itemCount: requests.length,
+                    itemBuilder: (context, index) {
+                      final req = requests[index];
+                      return _buildRequestCard(
+                        petName: req.petName,
+                        requester: req.adopterName,
+                        status: req.status,
+                        onApprove: () async {
+                          await getIt<AdoptionRequestRepository>().updateStatus(req.id, AdoptionStatus.approved);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aprobada')));
+                            // Recargar la lista si es necesario
+                          }
+                        },
+                        onReject: () async {
+                          await getIt<AdoptionRequestRepository>().updateStatus(req.id, AdoptionStatus.rejected);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rechazada')));
+                            // Recargar la lista si es necesario
+                          }
+                        },
+                      );
+                    },
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: const Color(0xFF6C5CE7),
-        unselectedItemColor: const Color(0xFF636E72),
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Inicio',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.pets_outlined),
-            label: 'Mascotas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_outlined),
-            label: 'Solicitudes',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Perfil',
+    ),
+    bottomNavigationBar: BottomNavigationBar(
+      currentIndex: 0,
+      selectedItemColor: const Color(0xFF6C5CE7),
+      unselectedItemColor: const Color(0xFF636E72),
+      showSelectedLabels: true,
+      showUnselectedLabels: true,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined),
+          label: 'Inicio',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.pets_outlined),
+          label: 'Mascotas',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.notifications_outlined),
+          label: 'Solicitudes',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          label: 'Perfil',
+        ),
+      ],
+      onTap: (index) {
+        if (index == 1) { // Navegar a la página de mascotas
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ShelterPetsPage()),
+          );
+        } else if (index == 2) { // Navegar a la página de solicitudes
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AllAdoptionRequestsPage()),
+          );
+        }
+      },
+    ),
+  );
+}
+
+Widget _buildStatCard({
+  required String count,
+  required String label,
+  required Color color,
+  required Color iconColor,
+}) {
+  return Expanded(
+    child: Container(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
-        onTap: (index) {
-          if (index == 1) { // Navegar a la página de mascotas
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ShelterPetsPage()),
-            );
-          } else if (index == 2) { // Navegar a la página de solicitudes
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AllAdoptionRequestsPage()),
-            );
-          }
-        },
       ),
-    );
-  }
-
-  Widget _buildStatCard(String count, String label) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFA29BFE),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Text(
+            count,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: iconColor,
             ),
-          ],
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              count,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: iconColor,
             ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildRequestCard({
     required String petName,
