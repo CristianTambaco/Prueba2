@@ -1,22 +1,57 @@
 // lib/features/adopter/presentation/pages/adopter_home_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../injection_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-
 import '../../../pet/domain/entities/pet_entity.dart';
 import '../../../pet/domain/repositories/pet_repository.dart';
 import '../../../adoption_request/domain/repositories/adoption_request_repository.dart';
-
 import '../../../gemini_chat/presentation/screens/chat_screen.dart';
 import '../../../gemini_chat/cubits/chat_cubit.dart';
 import '../../../gemini_chat/services/gemini_service.dart';
+import '../pages/my_adoption_requests_page.dart'; // 🆕 Importa la nueva página
 
-class AdopterHomePage extends StatelessWidget {
+class AdopterHomePage extends StatefulWidget {
   const AdopterHomePage({super.key});
+
+  @override
+  State<AdopterHomePage> createState() => _AdopterHomePageState();
+}
+
+class _AdopterHomePageState extends State<AdopterHomePage> {
+  int _currentIndex = 0;
+
+  void _navigateTo(int index) {
+    // 
+    if (index == 1 || index == 4) {
+      return; 
+    }
+
+    setState(() {
+      _currentIndex = index;
+    });
+
+    if (index == 2) {
+      // Chat IA
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => ChatCubit(getIt<GeminiService>()),
+            child: const ChatScreen(),
+          ),
+        ),
+      );
+    } else if (index == 3) {
+      // Mis Solicitudes
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const MyAdoptionRequestsPage()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,20 +72,14 @@ class AdopterHomePage extends StatelessWidget {
                   title: const Text('¿Cerrar sesión?'),
                   content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
                   actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancelar'),
-                    ),
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
                     TextButton(
                       onPressed: () {
                         context.read<AuthBloc>().add(const SignOutRequested());
                         Navigator.pop(context);
                         Navigator.pushReplacementNamed(context, '/login');
                       },
-                      child: const Text(
-                        'Cerrar sesión',
-                        style: TextStyle(color: Colors.red),
-                      ),
+                      child: const Text('Cerrar sesión', style: TextStyle(color: Colors.red)),
                     ),
                   ],
                 ),
@@ -59,7 +88,6 @@ class AdopterHomePage extends StatelessWidget {
           ),
         ],
       ),
-
       body: SafeArea(
         child: FutureBuilder<List<PetEntity>>(
           future: getIt<PetRepository>()
@@ -69,12 +97,9 @@ class AdopterHomePage extends StatelessWidget {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
-
             final pets = snapshot.data ?? [];
-
             return CustomScrollView(
               slivers: [
-                /// ---------- HEADER ----------
                 SliverPadding(
                   padding: const EdgeInsets.all(16),
                   sliver: SliverToBoxAdapter(
@@ -85,10 +110,7 @@ class AdopterHomePage extends StatelessWidget {
                           children: [
                             Text(
                               'Hola, ${user?.displayName ?? user?.email.split('@').first}',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(width: 8),
                             const Text('👋', style: TextStyle(fontSize: 20)),
@@ -97,14 +119,9 @@ class AdopterHomePage extends StatelessWidget {
                         const SizedBox(height: 16),
                         const Text(
                           'Encuentra tu mascota',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 16),
-
-                        // 🔍 Search
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -122,16 +139,11 @@ class AdopterHomePage extends StatelessWidget {
                               prefixIcon: Icon(Icons.search, color: Color(0xFF636E72)),
                               hintText: 'Buscar mascota...',
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
-
-                        // 🏷 Filters
                         Row(
                           children: [
                             _buildFilterButton('Todos', true),
@@ -145,17 +157,12 @@ class AdopterHomePage extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                /// ---------- GRID ----------
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        return _buildPetCard(
-                          pet: pets[index],
-                          context: context,
-                        );
+                        return _buildPetCard(pet: pets[index], context: context);
                       },
                       childCount: pets.length,
                     ),
@@ -173,7 +180,7 @@ class AdopterHomePage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
+        currentIndex: _currentIndex,
         selectedItemColor: const Color(0xFFFF8C42),
         unselectedItemColor: const Color(0xFF636E72),
         showSelectedLabels: true,
@@ -185,20 +192,7 @@ class AdopterHomePage extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Solicitudes'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
         ],
-        onTap: (index) {
-          if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => BlocProvider(
-                  create: (context) => ChatCubit(getIt<GeminiService>()),
-                  child: const ChatScreen(),
-                ),
-              ),
-            );
-          }
-        },
-        
+        onTap: _navigateTo,
       ),
     );
   }
@@ -223,7 +217,6 @@ class AdopterHomePage extends StatelessWidget {
   Widget _buildPetCard({required PetEntity pet, required BuildContext context}) {
     final authBloc = context.read<AuthBloc>();
     final user = authBloc.state is AuthAuthenticated ? (authBloc.state as AuthAuthenticated).user : null;
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -259,7 +252,8 @@ class AdopterHomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(pet.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text('${pet.type} • ${pet.age} años', style: const TextStyle(fontSize: 14, color: Color(0xFF636E72))),
+                Text('${pet.type} • ${pet.age} años',
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF636E72))),
                 const SizedBox(height: 8),
                 ElevatedButton.icon(
                   onPressed: user != null
