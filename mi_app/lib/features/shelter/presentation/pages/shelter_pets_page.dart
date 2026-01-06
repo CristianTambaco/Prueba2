@@ -8,6 +8,14 @@ import '../../../pet/domain/entities/pet_entity.dart';
 import '../../../pet/domain/repositories/pet_repository.dart';
 import '../pages/add_edit_pet_page.dart';
 
+// Colores definidos localmente (puedes moverlos a tu AppColors si deseas)
+const Color _primaryColor = Color(0xFFFF6B35); // Naranja cálido
+const Color _secondaryColor = Color(0xFF4CAF50); // Verde suave
+const Color _textDark = Color(0xFF2D2D2D);
+const Color _textMedium = Color(0xFF757575);
+const Color _deleteColor = Color(0xFFF44336);
+const Color _editColor = Color(0xFF2196F3);
+
 class ShelterPetsPage extends StatefulWidget {
   const ShelterPetsPage({super.key});
 
@@ -50,7 +58,7 @@ class _ShelterPetsPageState extends State<ShelterPetsPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+            child: const Text('Eliminar', style: TextStyle(color: _deleteColor)),
           ),
         ],
       ),
@@ -62,7 +70,7 @@ class _ShelterPetsPageState extends State<ShelterPetsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Mascota eliminada')),
         );
-        _loadPets(); //  Refresca la lista
+        _loadPets();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${result.fold((l) => l.message, (_) => '')}')),
@@ -81,17 +89,21 @@ class _ShelterPetsPageState extends State<ShelterPetsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis Mascotas'),
+        title: const Text(
+          'Mis Mascotas',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: const Color(0xFF00C897),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => AddEditPetPage(shelterId: user.id),
                 ),
-              ).then((_) => _loadPets()); //  Recarga después de agregar/editar
+              ).then((_) => _loadPets());
             },
           ),
         ],
@@ -102,9 +114,13 @@ class _ShelterPetsPageState extends State<ShelterPetsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Lista de mascotas',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: _textDark,
+                ),
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -113,37 +129,66 @@ class _ShelterPetsPageState extends State<ShelterPetsPage> {
                   itemBuilder: (context, index) {
                     final pet = _pets[index];
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: ListTile(
-                        leading: pet.imageUrl != null
-                            ? CircleAvatar(
-                                backgroundImage: NetworkImage(pet.imageUrl!),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        leading: pet.imageUrl != null && pet.imageUrl!.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: Image.network(
+                                  pet.imageUrl!,
+                                  width: 48,
+                                  height: 48,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => _buildFallbackAvatar(),
+                                ),
                               )
-                            : const CircleAvatar(
-                                child: Icon(Icons.pets),
-                              ),
-                        title: Text(pet.name),
-                        subtitle: Text('${pet.type} • ${pet.age} años'),
+                            : _buildFallbackAvatar(),
+                        title: Text(
+                          pet.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color: _textDark,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${pet.type} • ${pet.age} años',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: _textMedium,
+                          ),
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => AddEditPetPage(
-                                      shelterId: user.id,
-                                      pet: pet,
+                            Tooltip(
+                              message: 'Editar',
+                              child: IconButton(
+                                icon: Icon(Icons.edit, color: _editColor),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AddEditPetPage(
+                                        shelterId: user.id,
+                                        pet: pet,
+                                      ),
                                     ),
-                                  ),
-                                ).then((_) => _loadPets()); //  Recarga después de editar
-                              },
+                                  ).then((_) => _loadPets());
+                                },
+                              ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: () => _deletePet(pet.id),
+                            Tooltip(
+                              message: 'Eliminar',
+                              child: IconButton(
+                                icon: Icon(Icons.delete_outline, color: _deleteColor),
+                                onPressed: () => _deletePet(pet.id),
+                              ),
                             ),
                           ],
                         ),
@@ -155,6 +200,22 @@ class _ShelterPetsPageState extends State<ShelterPetsPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackAvatar() {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: _primaryColor.withOpacity(0.15),
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(
+        Icons.pets,
+        color: _primaryColor,
+        size: 24,
       ),
     );
   }
